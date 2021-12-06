@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+collect() {
+    profile="${1}"
+
+    AWS_PROFILE="${profile}" \
+    aws_recon \
+    --services config \
+    --regions eu-west-1,us-east-1 \
+    --verbose \
+    --output "${profile}.json"
+}
+
+export -f collect
+
+export AWS_CONFIG_FILE=/tmp/profiles
+export AWS_SHARED_CREDENTIALS_FILE=/dev/null
+
+export AWS_DEFAULT_REGION=eu-west-1
+
+time parallel \
+--joblog job.log \
+--verbose \
+--eta \
+--bar \
+--output-as-files \
+--results . \
+--header : \
+collect \
+::: profiles $(aws configure list-profiles)
